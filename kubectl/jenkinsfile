@@ -1,0 +1,23 @@
+pipeline {
+    agent {
+        label 'ubuntu'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                cleanWs()
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/shlomoshalit123/Infrastructure-Setup.git']])
+            }
+        }
+        stage('Install kubectl') {
+            steps {
+                    sh 'curl -Lo kubectl https://dl.k8s.io/release/$(curl -s -L https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl'
+                    sh 'chmod +x ./kubectl'
+                    sh 'sudo mv ./kubectl /usr/local/bin/kubectl'
+                    sh 'kubectl version'
+            }
+        }
+
+    }
+}
