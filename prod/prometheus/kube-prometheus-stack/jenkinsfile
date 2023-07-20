@@ -18,7 +18,7 @@ pipeline {
                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/shlomoshalit123/Infrastructure-Setup.git']])
             }
         }
-        stage('Build K8S with KOPS') {
+        stage('Deply Prometheus') {
             steps {
                 sh "helm install ${CHART_NAME} ."
             }
