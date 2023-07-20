@@ -11,7 +11,7 @@ pipeline {
         NODE_SIZE="t3.xlarge"
         AMI="ami-0ad8f0f72fd4dc1ac"
         NODES_SSH_CERT_PATH='/home/sshalit/certs/shlomi-final-project.pem'
-        NEXUS_SERVER="13.50.194.17:5000"
+        NEXUS_SERVER="http://13.50.194.17:5000"
     }
 
     agent {
@@ -40,7 +40,7 @@ pipeline {
                         ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "hostname"
                         ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "cat /etc/containerd/config.toml"
                     done
-                    kubectl create secret docker-registry regcred --docker-server="http://${NEXUS_SERVER}" --docker-username=${nexus_user} --docker-password=${nexus_password}
+                    kubectl create secret docker-registry regcred --docker-server=${NEXUS_SERVER} --docker-username=${nexus_user} --docker-password=${nexus_password}
                     '''
                 }
             }
