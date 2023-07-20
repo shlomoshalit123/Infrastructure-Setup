@@ -1,0 +1,31 @@
+pipeline {
+    environment {
+        CHART_NAME='prom'
+    }
+
+    agent {
+        label 'ubuntu'
+    }
+    
+    parameters {
+        choice(name: 'ACTION', choices: ['ShowCluster', 'DeployCluster', 'RemoveCluster'], description: 'Select action:')
+    }
+
+    stages {
+        stage('checkout') {
+            steps {
+                cleanWs()
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/shlomoshalit123/Infrastructure-Setup.git']])
+            }
+        }
+        stage('Build K8S with KOPS') {
+            when {equals expected: "DeployCluster", actual: "${params.ACTION}" }
+            steps {
+
+                withCredentials([usernamePassword(credentialsId: 'AWS-Credentials-IAM', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh "helm install ${CHART_NAME} ."
+                }
+            }
+        }      
+    }
+}
