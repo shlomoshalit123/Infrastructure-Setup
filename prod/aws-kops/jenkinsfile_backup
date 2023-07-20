@@ -68,16 +68,16 @@ pipeline {
                 }
             }
         }
-        stage('Install argocd') {
-            when {equals expected: "DeployCluster", actual: "${params.ACTION}" }
+        // stage('Install argocd') {
+        //     when {equals expected: "DeployCluster", actual: "${params.ACTION}" }
 
-            steps {
-                sh '''kubectl create namespace argocd
-                kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-                kubectl get pods -n argo'''
+        //     steps {
+        //         sh '''kubectl create namespace argocd
+        //         kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+        //         kubectl get pods -n argo'''
                 
-            }
-        }
+        //     }
+        // }
         stage('KOPS Remove K8S') {
             when {equals expected: "RemoveCluster", actual: "${params.ACTION}" }
 
