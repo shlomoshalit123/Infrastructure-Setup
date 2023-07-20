@@ -33,9 +33,9 @@ pipeline {
             when {equals expected: "DeployCluster", actual: "${params.ACTION}" }
             steps {
                 // cleanWs()
-                dir("${env.WORKSPACE}@tmp") {
-                    deleteDir()
-                }
+                // dir("${env.WORKSPACE}@tmp") {
+                //     deleteDir()
+                // }
                 withCredentials([usernamePassword(credentialsId: 'AWS-Credentials-IAM', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
                     sh '''
                     kops create cluster \
