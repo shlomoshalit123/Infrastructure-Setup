@@ -73,28 +73,26 @@ pipeline {
 
             steps {
                 cleanWs()
-                sh '''
-                export AWS_ACCESS_KEY_ID=AKIAU77SCMU3L37JTHV4
-                export AWS_SECRET_ACCESS_KEY=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
-                export AWS_DEFAULT_REGION=eu-north-1
-                kops delete cluster --name ${NAME} --state s3://${KOPS_STATE_BUCKET_NAME} --yes
-                '''
+                withCredentials([usernamePassword(credentialsId: 'AWS-Credentials-IAM', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh '''
+                    kops delete cluster --name ${NAME} --state s3://${KOPS_STATE_BUCKET_NAME} --yes
+                    '''
+                }
             }
         }  
         stage('Show Cluster') {
             when {equals expected: "ShowCluster", actual: "${params.ACTION}" }
 
             steps {
-                sh '''
-                export AWS_ACCESS_KEY_ID=AKIAU77SCMU3L37JTHV4
-                export AWS_SECRET_ACCESS_KEY=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
-                export AWS_DEFAULT_REGION=eu-north-1
-                kops get all --name ${NAME} --state s3://${KOPS_STATE_BUCKET_NAME}
-                kops get clusters --name ${NAME} --state s3://${KOPS_STATE_BUCKET_NAME} -o yaml
-                echo -e "/n*************/n"
-                kubectl get pods -A
-                echo -e "/n*************/n"
-                '''
+                withCredentials([usernamePassword(credentialsId: 'AWS-Credentials-IAM', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh '''
+                    kops get all --name ${NAME} --state s3://${KOPS_STATE_BUCKET_NAME}
+                    kops get clusters --name ${NAME} --state s3://${KOPS_STATE_BUCKET_NAME} -o yaml
+                    echo -e "/n*************/n"
+                    kubectl get pods -A
+                    echo -e "/n*************/n"
+                    '''
+                }
             }
         }       
     }
