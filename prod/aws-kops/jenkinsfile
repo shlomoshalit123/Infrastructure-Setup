@@ -62,11 +62,12 @@ pipeline {
                     sh '''
                     NODES_ID=$(aws autoscaling describe-auto-scaling-groups --query AutoScalingGroups[1].Instances[].InstanceId --output text)
                     NODES_IP=$(for ID in $NODES_ID; do      aws ec2 describe-instances --instance-ids $ID --query 'Reservations[*].Instances[*].PublicIpAddress' --output text; done)
+                    ls -R
                     for node_ip in $NODES_IP
                     do
                         ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo chown ubuntu:ubuntu /etc/containerd/config.toml"
-                        scp -i ${NODES_SSH_CERT_PATH}  prod/aws-kops/config.toml ubuntu@${node_ip}:/etc/containerd
-                        ssh -T -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo systemctl restart containerd"
+                        scp -i ${NODES_SSH_CERT_PATH}  ./prod/aws-kops/config.toml ubuntu@${node_ip}:/etc/containerd
+                        ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo systemctl restart containerd"
                         ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "hostname"
                         ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "cat /etc/containerd/config.toml"
                     done
