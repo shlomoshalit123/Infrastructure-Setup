@@ -58,10 +58,11 @@ pipeline {
                     NODES_IP=$(for ID in $NODES_ID; do      aws ec2 describe-instances --instance-ids $ID --query 'Reservations[*].Instances[*].PublicIpAddress' --output text; done)
                     for node_ip in $NODES_IP
                     do
-                        ssh -T -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo chown ubuntu:ubuntu /etc/containerd/config.toml"
-                        ssh -T -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo echo '  [plugins.\"io.containerd.grpc.v1.cri\".registry]' >> /etc/containerd/config.toml"
-                        ssh -T -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo echo \"    config_path = '/etc/containerd/certs.d'\" >> /etc/containerd/config.toml"
+                        ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo chown ubuntu:ubuntu /etc/containerd/config.toml"
+                        scp -i ${NODES_SSH_CERT_PATH}  prod/aws-kops/config.toml ubuntu@${node_ip}:/etc/containerd
                         ssh -T -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo systemctl restart containerd"
+                        ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "hostname"
+                        ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "cat /etc/containerd/config.toml"
                     done
                     kubectl create secret docker-registry regcred --docker-server=http://${NEXUS_SERVER} --docker-username=${nexus_user} --docker-password=${nexus_password}
                     '''

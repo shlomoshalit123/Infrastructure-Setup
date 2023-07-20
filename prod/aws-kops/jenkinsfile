@@ -23,6 +23,12 @@ pipeline {
     }
 
     stages {
+        stage('checkout') {
+            steps {
+                cleanWs()
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/shlomoshalit123/Infrastructure-Setup.git']])
+            }
+        }
         stage('Build K8S with KOPS') {
             when {equals expected: "DeployCluster", actual: "${params.ACTION}" }
             steps {
@@ -59,9 +65,10 @@ pipeline {
                     for node_ip in $NODES_IP
                     do
                         ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo chown ubuntu:ubuntu /etc/containerd/config.toml"
-                        ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo echo '  [plugins.\"io.containerd.grpc.v1.cri\".registry]' >> /etc/containerd/config.toml"
-                        ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo echo \"    config_path = '/etc/containerd/certs.d'\" >> /etc/containerd/config.toml"
-                        ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo systemctl restart containerd"
+                        scp -i ${NODES_SSH_CERT_PATH}  prod/aws-kops/config.toml ubuntu@${node_ip}:/etc/containerd
+                        ssh -T -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo systemctl restart containerd"
+                        ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "hostname"
+                        ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "cat /etc/containerd/config.toml"
                     done
                     kubectl create secret docker-registry regcred --docker-server=http://${NEXUS_SERVER} --docker-username=${nexus_user} --docker-password=${nexus_password}
                     '''
