@@ -25,14 +25,14 @@ pipeline {
     stages {
         stage('checkout') {
             steps {
-                cleanWs()
+                // cleanWs()
                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/shlomoshalit123/Infrastructure-Setup.git']])
             }
         }
         stage('Build K8S with KOPS') {
             when {equals expected: "DeployCluster", actual: "${params.ACTION}" }
             steps {
-                cleanWs()
+                // cleanWs()
                 dir("${env.WORKSPACE}@tmp") {
                     deleteDir()
                 }
@@ -83,7 +83,7 @@ pipeline {
             when {equals expected: "RemoveCluster", actual: "${params.ACTION}" }
 
             steps {
-                cleanWs()
+                // cleanWs()
                 withCredentials([usernamePassword(credentialsId: 'AWS-Credentials-IAM', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
                     sh '''
                     kops delete cluster --name ${NAME} --state s3://${KOPS_STATE_BUCKET_NAME} --yes
