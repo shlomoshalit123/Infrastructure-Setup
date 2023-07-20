@@ -1,0 +1,59 @@
+ssh -o -t -i ~/Downloads/shlomi-final-project.pem ubuntu@13.51.178.161 "sudo chown ubuntu:ubuntu /etc/containerd/config.toml"
+ssh -t -i ~/Downloads/shlomi-final-project.pem ubuntu@13.51.178.161 "sudo echo '  [plugins.\"io.containerd.grpc.v1.cri\".registry]' >> /etc/containerd/config.toml"
+ssh -t -i ~/Downloads/shlomi-final-project.pem ubuntu@13.51.178.161 "sudo echo \"    config_path = '/etc/containerd/certs.d'\" >> /etc/containerd/config.toml"
+ssh -t -i ~/Downloads/shlomi-final-project.pem ubuntu@13.51.178.161 "sudo systemctl restart containerd"
+
+
+ssh -t -i ~/Downloads/shlomi-final-project.pem ubuntu@16.16.24.64 "sudo chown ubuntu:ubuntu /etc/containerd/config.toml"
+ssh -t -i ~/Downloads/shlomi-final-project.pem ubuntu@16.16.24.64 "sudo echo '  [plugins.\"io.containerd.grpc.v1.cri\".registry]' >> /etc/containerd/config.toml"
+ssh -t -i ~/Downloads/shlomi-final-project.pem ubuntu@16.16.24.64 "sudo echo \"    config_path = '/etc/containerd/certs.d'\" >> /etc/containerd/config.toml"
+ssh -t -i ~/Downloads/shlomi-final-project.pem ubuntu@16.16.24.64 "sudo systemctl restart containerd"
+
+
+
+# get autoscaling name of nodes
+NODES_ID=aws autoscaling describe-auto-scaling-groups --query AutoScalingGroups[1].Instances[].InstanceId --output text
+
+# --filters "Name=availability-zone,Values=us-west-2a"
+# https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-filter.html
+
+# Get public IP
+aws ec2 describe-instances --instance-ids i-0865be76b6753f305 \
+    --query 'Reservations[*].Instances[*].PublicIpAddress' \
+    --output text
+
+    13.51.178.161
+    16.16.24.64
+
+
+# Enable private registry
+NODES_ID=$(aws autoscaling describe-auto-scaling-groups --query AutoScalingGroups[1].Instances[].InstanceId --output text)
+NODES_IP=$(for ID in $NODES_ID; do      aws ec2 describe-instances --instance-ids $ID --query 'Reservations[*].Instances[*].PublicIpAddress' --output text; done)
+for node_ip in $NODES_IP
+do
+    ssh -o -t -i ~/Downloads/shlomi-final-project.pem ubuntu@${node_ip} "sudo chown ubuntu:ubuntu /etc/containerd/config.toml"
+    ssh -t -i ~/Downloads/shlomi-final-project.pem ubuntu@${node_ip} "sudo echo '  [plugins.\"io.containerd.grpc.v1.cri\".registry]' >> /etc/containerd/config.toml"
+    ssh -t -i ~/Downloads/shlomi-final-project.pem ubuntu@${node_ip} "sudo echo \"    config_path = '/etc/containerd/certs.d'\" >> /etc/containerd/config.toml"
+    ssh -t -i ~/Downloads/shlomi-final-project.pem ubuntu@${node_ip} "sudo systemctl restart containerd"
+done
+kubectl create secret docker-registry regcred --docker-server=http://13.50.194.17:5000 --docker-username=admin --docker-password=Xavi2013
+
+
+aws s3api create-bucket --bucket ${KOPS_STATE_BUCKET_NAME} --region ${AWS_DEFAULT_REGION} --create-bucket-configuration LocationConstraint=${AWS_DEFAULT_REGION}
+aws s3api create-bucket --bucket ${KOPS_OIDC_BUCKET_NAME} --region ${AWS_DEFAULT_REGION} --object-ownership BucketOwnerPreferred --create-bucket-configuration LocationConstraint=${AWS_DEFAULT_REGION}
+aws s3api put-public-access-block --bucket ${KOPS_OIDC_BUCKET_NAME} --public-access-block-configuration BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false
+aws s3api put-bucket-acl --bucket ${KOPS_OIDC_BUCKET_NAME} --acl public-read
+aws s3api put-bucket-versioning --bucket ${KOPS_STATE_BUCKET_NAME} --versioning-configuration Status=Enabled
+aws s3api put-bucket-encryption --bucket ${KOPS_STATE_BUCKET_NAME} --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
+
+
+
+
+aws s3 rb s3://shlomishalit-kops-state-store --force
+
+
+
+aws s3 rm s3://shlomishalit-kops-state-store --recursive
+aws s3api delete-objects --bucket shlomishalit-kops-state-store --delete "$(aws s3api list-object-versions --bucket 'shlomishalit-kops-state-store' --output=json --query='{Objects: Versions[].{Key:Key,VersionId:VersionId}}')"
+
+
