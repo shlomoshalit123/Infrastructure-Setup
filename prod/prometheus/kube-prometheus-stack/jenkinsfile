@@ -16,8 +16,6 @@ pipeline {
         }
         stage('Deply Prometheus') {
             steps {
-                sh "pwd"
-                sh "ls -R"
                 sh "helm install ${CHART_NAME} ./prod/prometheus/kube-prometheus-stack"
             }
         }      
