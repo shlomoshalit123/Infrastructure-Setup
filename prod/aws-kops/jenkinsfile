@@ -25,7 +25,7 @@ pipeline {
     stages {
         stage('checkout') {
             steps {
-                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/shlomoshalit123/Infrastructure-Setup.git']])
+                checkout scmGit(branches: [[name: '*/main']], extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'deploy']], userRemoteConfigs: [[url: 'https://github.com/shlomoshalit123/Infrastructure-Setup.git']])
             }
         }
         stage('Build K8S with KOPS') {
@@ -65,7 +65,7 @@ pipeline {
                     for node_ip in $NODES_IP
                     do
                         ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo chown ubuntu:ubuntu /etc/containerd/config.toml"
-                        scp -i ${NODES_SSH_CERT_PATH}  ./prod/aws-kops/config.toml ubuntu@${node_ip}:/etc/containerd
+                        scp -i ${NODES_SSH_CERT_PATH}  ./deploy/prod/aws-kops/config.toml ubuntu@${node_ip}:/etc/containerd
                         ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo systemctl restart containerd"
                         ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "hostname"
                         ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "cat /etc/containerd/config.toml"
