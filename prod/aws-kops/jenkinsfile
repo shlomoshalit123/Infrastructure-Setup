@@ -62,7 +62,8 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'AWS-Credentials-IAM', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID'), usernamePassword(credentialsId: 'nexus', passwordVariable: 'nexus_password', usernameVariable: 'nexus_user')]) {
                     sh '''
-                    NODES_ID=$(aws autoscaling describe-auto-scaling-groups --query AutoScalingGroups[1].Instances[].InstanceId --output text)
+                    AUTOSCALINGGROUPNAME="nodes-${ZONE}.${NAME}"
+                    NODES_ID=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names ${AUTOSCALINGGROUPNAME} --query AutoScalingGroups[].Instances[].InstanceId --output text)
                     NODES_IP=$(for ID in $NODES_ID; do      aws ec2 describe-instances --instance-ids $ID --query 'Reservations[*].Instances[*].PublicIpAddress' --output text; done)
                     pwd
                     ls -R
