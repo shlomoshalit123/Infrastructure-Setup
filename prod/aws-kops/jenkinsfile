@@ -28,6 +28,22 @@ pipeline {
                 checkout scmGit(branches: [[name: '*/main']], extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'deploy']], userRemoteConfigs: [[url: 'https://github.com/shlomoshalit123/Infrastructure-Setup.git']])
             }
         }
+        stage('Create S3 Buckets') {
+            when {equals expected: "DeployCluster", actual: "${params.ACTION}" }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'AWS-Credentials-IAM', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh '''
+                    aws s3api create-bucket --bucket ${KOPS_STATE_BUCKET_NAME} --region ${AWS_DEFAULT_REGION} --create-bucket-configuration LocationConstraint=${AWS_DEFAULT_REGION}
+                    aws s3api create-bucket --bucket ${KOPS_OIDC_BUCKET_NAME} --region ${AWS_DEFAULT_REGION} --object-ownership BucketOwnerPreferred --create-bucket-configuration LocationConstraint=${AWS_DEFAULT_REGION}
+                    aws s3api put-public-access-block --bucket ${KOPS_OIDC_BUCKET_NAME} --public-access-block-configuration BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false
+                    aws s3api put-bucket-acl --bucket ${KOPS_OIDC_BUCKET_NAME} --acl public-read 
+                    aws s3api put-bucket-versioning --bucket ${KOPS_STATE_BUCKET_NAME}  --versioning-configuration Status=Enabled
+                    aws s3api put-bucket-encryption --bucket ${KOPS_STATE_BUCKET_NAME} --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
+                    '''
+                }
+                archiveArtifacts artifacts: "config", followSymlinks: false
+            }
+        }
         stage('Build K8S with KOPS') {
             when {equals expected: "DeployCluster", actual: "${params.ACTION}" }
             steps {
@@ -79,6 +95,8 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'AWS-Credentials-IAM', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
                     sh '''
                     kops delete cluster --name ${NAME} --state s3://${KOPS_STATE_BUCKET_NAME} --yes
+                    python3 ./deploy/prod/aws-kops/delete_bucket.py ${KOPS_OIDC_BUCKET_NAME}
+                    python3 ./deploy/prod/aws-kops/delete_bucket.py ${KOPS_STATE_BUCKET_NAME}
                     '''
                 }
             }

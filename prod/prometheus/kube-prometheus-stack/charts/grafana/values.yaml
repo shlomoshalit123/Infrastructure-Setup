@@ -222,24 +222,20 @@ hostAliases: []
   #     - "my.host.com"
 
 ingress:
-  enabled: true
+  enabled: false
   # For Kubernetes >= 1.18 you should specify the ingress-controller via the field ingressClassName
   # See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress
   # ingressClassName: nginx
   # Values can be templated
-  annotations: {
-    kubernetes.io/ingress.class: nginx,
-    nginx.ingress.kubernetes.io/ssl-redirect: "false",
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
-  }  # kubernetes.io/tls-acme: "true"
+  annotations: {}  # kubernetes.io/tls-acme: "true"
   labels: {}
   path: /grafana/?(.*)
 
   # pathType is only for k8s >= 1.1=
   pathType: Prefix
 
-  hosts:
-    - a0e602822f46f4ad398f527021970c1e-678860249.eu-north-1.elb.amazonaws.com
+  # hosts:
+  #   - a0e602822f46f4ad398f527021970c1e-678860249.eu-north-1.elb.amazonaws.com
   ## Extra paths to prepend to every host configuration. This is useful when working with annotation based services.
   extraPaths: []
   # - path: /*
@@ -333,7 +329,9 @@ persistence:
   # annotations: {}
   finalizers:
     - kubernetes.io/pvc-protection
-  # selectorLabels: {}
+  selectorLabels: {
+    
+  }
   ## Sub-directory of the PV to mount. Can be templated.
   # subPath: ""
   ## Name of an existing PVC. Can be templated.

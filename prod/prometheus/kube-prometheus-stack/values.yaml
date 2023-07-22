@@ -856,7 +856,10 @@ alertmanager:
 grafana:
   enabled: true
   namespaceOverride: ""
-
+  persistence:
+    enabled: true
+    # selectorLabels: 
+    #   type: "amazonEBS"
   ## ForceDeployDatasources Create datasource configmap even if grafana deployment has been disabled
   ##
   forceDeployDatasources: false
