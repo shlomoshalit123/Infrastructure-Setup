@@ -85,7 +85,6 @@ pipeline {
                     do
                         ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo chown ubuntu:ubuntu /etc/containerd/config.toml"
                         scp -i ${NODES_SSH_CERT_PATH}  ./deploy/prod/aws-kops/config.toml ubuntu@${node_ip}:/etc/containerd
-                        scp -i ${NODES_SSH_CERT_PATH}  ./deploy/prod/aws-kops/containerd ubuntu@${node_ip}:/etc/containerd
                         ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "sudo systemctl restart containerd"
                         ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "hostname"
                         ssh -t -o StrictHostKeyChecking=no -i ${NODES_SSH_CERT_PATH} ubuntu@${node_ip} "cat /etc/containerd/config.toml"
