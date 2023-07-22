@@ -12,7 +12,6 @@ pipeline {
         AMI="ami-0ad8f0f72fd4dc1ac"
         NODES_SSH_CERT_PATH='/home/sshalit/certs/shlomi-final-project.pem'
         NEXUS_SERVER="13.50.194.17:5000"
-        RULES={"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}
     }
 
     agent {
@@ -39,9 +38,8 @@ pipeline {
                     aws s3api put-public-access-block --bucket ${KOPS_OIDC_BUCKET_NAME} --public-access-block-configuration BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false
                     aws s3api put-bucket-acl --bucket ${KOPS_OIDC_BUCKET_NAME} --acl public-read 
                     aws s3api put-bucket-versioning --bucket ${KOPS_STATE_BUCKET_NAME}  --versioning-configuration Status=Enabled
-
                     '''
-                    sh "aws s3api put-bucket-encryption --bucket ${KOPS_STATE_BUCKET_NAME} --server-side-encryption-configuration '${RULES}'"
+                    // sh "aws s3api put-bucket-encryption --bucket ${KOPS_STATE_BUCKET_NAME} --server-side-encryption-configuration '${RULES}'"
                 }
                 archiveArtifacts artifacts: "config", followSymlinks: false
             }
