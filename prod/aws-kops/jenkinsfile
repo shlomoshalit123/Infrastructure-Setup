@@ -1,7 +1,7 @@
 pipeline {
     environment {
         AWS_DEFAULT_REGION='eu-north-1'
-        NAME="shlomishalitkopstest.k8s.local"
+        NAME="shlomishalitkops.k8s.local"
         KOPS_STATE_BUCKET_NAME="shlomishalit-kops-state-store"
         KOPS_OIDC_BUCKET_NAME="shlomishalit-kops-oidc-store"
         KOPS_STATE_STORE="s3://${KOPS_STATE_BUCKET_NAME}"
@@ -61,7 +61,7 @@ pipeline {
                 '''
             }
         }
-        stage('Install nginx ingress') {
+        stage('Install argocd') {
             steps {
                 sh '''
                 kubectl create namespace argocd
